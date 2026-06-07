@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Session WhatsApp (JANGAN di-commit! berisi kredensial login)
+sessions/*
+!sessions/.gitkeep
+
+# File sementara
+tmp/*
+!tmp/.gitkeep
+
+# Database lokal (uncomment bila tidak ingin ikut commit)
+# database/*.json
+
+# Log & OS
+*.log
+.DS_Store
+Thumbs.db
+.env
+
+# Kiro internal config
+.kiro/
