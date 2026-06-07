@@ -97,7 +97,8 @@ async function startBot() {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
-    browser: Browsers.appropriate("Desktop"),
+    // Browser "Ubuntu/Chrome" paling stabil & kompatibel untuk pairing code.
+    browser: usePairing ? Browsers.ubuntu("Chrome") : Browsers.appropriate("Desktop"),
     markOnlineOnConnect: true,
     generateHighQualityLinkPreview: true,
     msgRetryCounterCache,
@@ -115,6 +116,16 @@ async function startBot() {
       );
     }
     number = func.toNumber(number);
+
+    // Validasi dasar nomor (harus diawali kode negara, panjang wajar)
+    if (!number || number.length < 8 || number.startsWith("0")) {
+      console.log(
+        "\n❌ Nomor tidak valid. Pakai format kode negara TANPA '+' & TANPA '0' di depan."
+      );
+      console.log("   Contoh Indonesia: 62812xxxxxxx (bukan 0812xxxx)\n");
+      return;
+    }
+
     if (number) {
       setTimeout(async () => {
         try {
@@ -124,7 +135,9 @@ async function startBot() {
           console.log(`🔗 KODE PAIRING : ${pretty}`);
           console.log("==============================");
           console.log(
-            "Buka WhatsApp > Perangkat Tertaut > Tautkan perangkat > Tautkan dengan nomor telepon, lalu masukkan kode di atas.\n"
+            "📲 Di HP (nomor bot): WhatsApp > Perangkat Tertaut > Tautkan perangkat > Tautkan dengan nomor telepon.\n" +
+              `⌨️  Masukkan kode: ${code}  (TANPA tanda strip, ketik 8 karakter saja)\n` +
+              "⏰ Buruan, kode kadaluarsa ~60 detik. Kalau invalid, hentikan bot, hapus folder 'sessions', jalankan lagi.\n"
           );
         } catch (e) {
           console.error("Gagal meminta pairing code:", e.message);
