@@ -77,7 +77,10 @@ function reloadModules() {
   console.log(
     `📦 Dimuat: ${commandList.length} command, ${plugins.length} plugin.`
   );
+  return { commandMap, commandList, plugins };
 }
+// Expose agar command .reload bisa memuat ulang command DAN plugin sekaligus
+global.reloadModules = reloadModules;
 
 async function startBot() {
   reloadModules();

@@ -9,7 +9,6 @@
  */
 
 const setting = require("../setting");
-const { toNumber } = require("../lib/functions");
 
 const LINK_REGEX = /(chat\.whatsapp\.com\/[A-Za-z0-9]+)|(https?:\/\/(wa\.me|t\.me|bit\.ly|linktr\.ee|youtu\.be|instagram\.com)\/?\S*)/i;
 

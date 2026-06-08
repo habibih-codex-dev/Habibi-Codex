@@ -9,10 +9,20 @@
  * ----------------------------------------------------
  */
 
+const { jidNormalizedUser } = require("@whiskeysockets/baileys");
 const setting = require("./setting");
 const db = require("./lib/database");
 const { serialize } = require("./lib/serialize");
 const func = require("./lib/functions");
+
+/** Normalisasi jid: buang device-id (:12) & agen, aman bila gagal */
+function norm(jid) {
+  try {
+    return jidNormalizedUser(jid);
+  } catch {
+    return jid || "";
+  }
+}
 
 /** Cek apakah jid termasuk owner */
 function isOwnerJid(jid) {
@@ -61,13 +71,28 @@ async function messageHandler({ conn, msg, commandMap, plugins }) {
       try {
         groupMetadata = await conn.groupMetadata(m.chat);
         participants = groupMetadata.participants || [];
-        const senderInfo = participants.find((p) => p.id === m.sender);
-        const botInfo = participants.find(
-          (p) => func.toNumber(p.id) === func.toNumber(conn.user.id)
+
+        // ID bot bisa berupa nomor (dengan device-id) atau LID -> kumpulkan semua
+        const botIds = [conn.user?.id, conn.user?.lid]
+          .filter(Boolean)
+          .map(norm);
+        const senderNorm = norm(m.sender);
+
+        // Cocokkan peserta berdasar id ATAU jid (Baileys baru punya keduanya)
+        const candidates = (p) => [p.id, p.jid].filter(Boolean).map(norm);
+
+        const senderInfo = participants.find((p) =>
+          candidates(p).includes(senderNorm)
         );
+        const botInfo = participants.find((p) =>
+          candidates(p).some((c) => botIds.includes(c))
+        );
+
         isAdmin = !!senderInfo && ["admin", "superadmin"].includes(senderInfo.admin);
         isBotAdmin = !!botInfo && ["admin", "superadmin"].includes(botInfo.admin);
-      } catch {}
+      } catch (e) {
+        console.error("[GROUP META]", e.message);
+      }
     }
 
     // ---------- Parsing prefix & command ----------

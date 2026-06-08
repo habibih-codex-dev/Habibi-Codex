@@ -20,15 +20,25 @@ module.exports = [
     owner: true,
     description: "Muat ulang semua command & plugin tanpa restart",
     async run(m, ctx) {
-      const c = loadCommands();
-      global.commandMap = c.map;
-      global.commandList = c.list;
-      global.plugins = loadPlugins();
-      // ganti referensi map yang dipakai handler
-      ctx.commandMap.clear();
-      for (const [k, v] of c.map) ctx.commandMap.set(k, v);
+      let info;
+      if (typeof global.reloadModules === "function") {
+        // Reload penuh (command + plugin) lewat fungsi inti di index.js
+        info = global.reloadModules();
+      } else {
+        // Fallback bila dijalankan di luar index.js
+        const c = loadCommands();
+        global.commandMap = c.map;
+        global.commandList = c.list;
+        global.plugins = loadPlugins();
+        info = { commandList: c.list, plugins: global.plugins, commandMap: c.map };
+      }
+      // Sinkronkan map yang sedang dipakai handler saat ini
+      if (ctx.commandMap && info.commandMap) {
+        ctx.commandMap.clear();
+        for (const [k, v] of info.commandMap) ctx.commandMap.set(k, v);
+      }
       await m.reply(
-        `🔄 Reload selesai.\n📦 ${c.list.length} command, ${global.plugins.length} plugin dimuat.`
+        `🔄 Reload selesai.\n📦 ${info.commandList.length} command, ${info.plugins.length} plugin dimuat.`
       );
     },
   },
